@@ -13,17 +13,7 @@ my %opts = ('d' => 'trend-tracker.sqlite',
 	    'D' => 'DBI:SQLite:dbname=');
 GetOptions(\%opts,
 	   ["c|config-file=s", "Config file to read"],
-           ["d|db=s",          "DB File (defaults to 'trend-tracker.sqlite')"],
-	   ["D|db-type=s",   "Database init type (default: DBI:SQLite:dbname=)"],
           ) || die;
-
-if (!exists($opts{'d'})) {
-    croak("you must supply a database file name with the -d flag");
-}
-
-if (-f $opts{'d'}) {
-    croak("refusing to delete existing database; please delete it first");
-}
 
 our %config;
 read_config($opts{'c'});
@@ -34,7 +24,7 @@ my $parameters  = config_array('parameters');
 my $extras      = config_array('extras');
 
 # create the table creation string
-my $dbcreate = "create table data (cgipid    int, timestamp int, $key      varchar(2096), ";
+my $dbcreate = "create table data (cgipid int, timestamp int, remoteaddress varchar(2096), $key varchar(2096), ";
 
 foreach my $parameter (@$parameters, @$extras) {
     $dbcreate .= "$parameter varchar(2096), ";
@@ -45,7 +35,7 @@ $dbcreate =~ s/, $/)/;
 print "$dbcreate\n";
 
 # actually perform the connection and creation
-my $dbh = DBI->connect("$opts{D}$opts{d}");
+my $dbh = DBI->connect($config{'database'});
 $dbh->do($dbcreate);
 
 #### WARNING: Must Match Copy in trend-tracker.cgi

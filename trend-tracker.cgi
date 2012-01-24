@@ -5,8 +5,10 @@ use IO::Dir;
 use strict;
 use CGI;
 use Data::Dumper;
+use DBI;
 
 our %config;
+our $dbh;
 
 my $runpath = $ENV{'SCRIPT_FILENAME'};
 $runpath =~ s/(.*)\/(.*)/$1/;
@@ -22,6 +24,7 @@ my $cgi = CGI->new;
 my $query_type = $cgi->param('type');
 
 read_config($configfile);
+init_db();
 
 if ($query_type eq 'submit') {
     handle_submit();
@@ -47,33 +50,63 @@ sub handle_submit {
     my $legalvalues = $config{'values'};
     my $extravalues = $config{'extravalues'};
     my $keyvalues   = $config{'keyvalues'};
-    my %data;
+
+    # create the insert statment and prepare it for use
+    my $statement = "insert into data (cgipid, timestamp, remoteaddress, $key, " . 
+	join(", ", @$parameters) . ", " .
+	join(", ", @$extras) .
+	") values(" .
+	("?, " x ($#$parameters + $#$extras + 5)) . "?)";
+
+    my $sth = $dbh->prepare($statement);
+    my $time = time();
 
     # loop through all the possibilities collecting data
     while (1) {
 	last if ($cgi->param($key . $count) eq '');
 
 	# store the key
-	$data{$key . $count} = $cgi->param($key . $count);
-	if ($data{$key . $count} !~ /$keyvalues/i) {
+	my $keyvalue = $cgi->param($key . $count);
+	if ($keyvalue !~ /$keyvalues/i) {
 	    Error("Illegal key value passed in");
 	}
 
-        foreach my $parameter (@$parameters) {
-	    $data{$parameter . $count} = $cgi->param($parameter . $count);
-	    if ($data{$parameter . $count} !~ /$legalvalues/i) {
-		delete $data{$parameter . $count};
-	    }
-	}
-	$count++;
-    }
+	my @values = ($$, $time);
 
-    # add in the singular extras
-    foreach my $parameter (@$extras) {
-	$data{$parameter} = $cgi->param($parameter);
-	if ($data{$parameter} !~ /$extravalues/i) {
-	    delete $data{$parameter};
+	# calculate (maybe) the remote address and push it on
+	if ($config{'logaddress'}) {
+	    my $addr = $cgi->remote_addr();
+	    if (lc($config{'logaddress'}) eq "sha1") {
+		eval 'require Digest::SHA1';
+		$addr = Digest::SHA1::sha1_base64($addr);
+	    }
+	    $addr;
+	    push @values, $addr;
+	} else {
+	    push @values, ''; ## XXX: make this entirely optional in the future
 	}
+
+	push @values, $keyvalue;
+
+        foreach my $parameter (@$parameters) {
+	    my $val = $cgi->param($parameter . $count);
+	    if ($val !~ /$legalvalues/i) {
+		$val = "";
+	    }
+	    push @values, $val;
+	}
+
+	foreach my $parameter (@$extras) {
+	    my $val = $cgi->param($parameter);
+	    if ($val !~ /$extravalues/i) {
+		$val = "";
+	    }
+	    push @values, $val;
+	}
+
+	print "here: $statement" . join(", ", @values) . "\n";
+	$count++;
+	$sth->execute(@values);
     }
 
     if ($config{'logaddress'}) {
@@ -82,14 +115,21 @@ sub handle_submit {
 	    eval 'require Digest::SHA1';
 	    $addr = Digest::SHA1::sha1_base64($addr);
 	}
-	$data{'remote_address'} = $addr;
     }
     
     # XXX: do something with the data...
     print "<pre>\n";
-    print Dumper(\%data);
+    #print Dumper(\%data);
     print "</pre>\n";
 }
+
+sub init_db {
+    $dbh = DBI->connect("$config{'database'}");
+    if (!$dbh) {
+	Erorr("Failed to connect to the database");
+    }
+}
+
 
 sub handle_report {
     print_headers();

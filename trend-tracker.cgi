@@ -60,6 +60,15 @@ sub handle_submit {
     foreach my $parameter (@$extras) {
 	$data{$parameter . $count} = $cgi->param($parameter . $count);
     }
+
+    if ($config{'logaddress'}) {
+	my $addr = $cgi->remote_addr();
+	if (lc($config{'logaddress'}) eq "sha1") {
+	    eval 'require Digest::SHA1';
+	    $addr = Digest::SHA1::sha1_base64($addr);
+	}
+	$data{'remote_address'} = $addr;
+    }
     
     # XXX: do something with the data...
     print "<pre>\n";

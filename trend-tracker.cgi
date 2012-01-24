@@ -45,12 +45,20 @@ sub handle_submit {
     my $extras      = config_array('extras');
     my $count       = $config{'startat'} || 0;
     my $legalvalues = $config{'values'};
+    my $extravalues = $config{'extravalues'};
+    my $keyvalues   = $config{'keyvalues'};
     my %data;
 
     # loop through all the possibilities collecting data
     while (1) {
 	last if ($cgi->param($key . $count) eq '');
+
+	# store the key
 	$data{$key . $count} = $cgi->param($key . $count);
+	if ($data{$key . $count} !~ /$keyvalues/i) {
+	    Error("Illegal key value passed in");
+	}
+
         foreach my $parameter (@$parameters) {
 	    $data{$parameter . $count} = $cgi->param($parameter . $count);
 	    if ($data{$parameter . $count} !~ /$legalvalues/i) {
@@ -63,6 +71,9 @@ sub handle_submit {
     # add in the singular extras
     foreach my $parameter (@$extras) {
 	$data{$parameter} = $cgi->param($parameter);
+	if ($data{$parameter} !~ /$extravalues/i) {
+	    delete $data{$parameter};
+	}
     }
 
     if ($config{'logaddress'}) {

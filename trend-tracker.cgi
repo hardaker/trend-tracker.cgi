@@ -117,10 +117,20 @@ sub handle_submit {
 	}
     }
     
-    # XXX: do something with the data...
-    print "<pre>\n";
-    #print Dumper(\%data);
-    print "</pre>\n";
+    if ($config{'thankyounote'}) {
+	print $config{'thankyounote'};
+    } else {
+	print "<h2>Thank you!</h2>\n";
+    }
+
+    if ($config{'thankyounotefile'}) {
+	my $tnh = new IO::File;
+	my $buffer;
+	$tnh->open($config{'thankyounotefile'});
+	while(read($tnh, $buffer, 4096) > 0) {
+	    print $buffer;
+	}
+    }
 }
 
 sub init_db {
@@ -129,7 +139,6 @@ sub init_db {
 	Erorr("Failed to connect to the database");
     }
 }
-
 
 sub handle_report {
     print_headers();

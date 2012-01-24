@@ -40,10 +40,11 @@ if ($query_type eq 'submit') {
 # handle incoming data submissions
 sub handle_submit {
     print_headers();
-    my $key        = $config{'key'};
-    my $parameters = config_array('parameters');
-    my $extras     = config_array('extras');
-    my $count      = $config{'startat'} || 0;
+    my $key         = $config{'key'};
+    my $parameters  = config_array('parameters');
+    my $extras      = config_array('extras');
+    my $count       = $config{'startat'} || 0;
+    my $legalvalues = $config{'values'};
     my %data;
 
     # loop through all the possibilities collecting data
@@ -52,13 +53,16 @@ sub handle_submit {
 	$data{$key . $count} = $cgi->param($key . $count);
         foreach my $parameter (@$parameters) {
 	    $data{$parameter . $count} = $cgi->param($parameter . $count);
+	    if ($data{$parameter . $count} !~ /$legalvalues/i) {
+		delete $data{$parameter . $count};
+	    }
 	}
 	$count++;
     }
 
     # add in the singular extras
     foreach my $parameter (@$extras) {
-	$data{$parameter . $count} = $cgi->param($parameter . $count);
+	$data{$parameter} = $cgi->param($parameter);
     }
 
     if ($config{'logaddress'}) {

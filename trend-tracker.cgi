@@ -102,6 +102,8 @@ sub handle_dump {
 #######################################################################
 # general routines
 #
+#### WARNING: Must Match Copy in createdb
+#             (to keep this file self-contained, we duplicate it here)
 sub read_config {
     my ($file) = @_;
     my $fh = new IO::File;

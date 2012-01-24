@@ -1,0 +1,79 @@
+#!/usr/bin/perl
+
+use DBI;
+use strict;
+use Carp;
+use IO::File;
+
+use Getopt::GUI::Long;
+Getopt::GUI::Long::Configure(qw(display_help no_ignore_case capture_output no_gui));
+
+my %opts = ('d' => 'trend-tracker.sqlite',
+	    'c' => 'trend-tracker.config',
+	    'D' => 'DBI:SQLite:dbname=');
+GetOptions(\%opts,
+	   ["c|config-file=s", "Config file to read"],
+           ["d|db=s",          "DB File (defaults to 'trend-tracker.sqlite')"],
+	   ["D|db-type=s",   "Database init type (default: DBI:SQLite:dbname=)"],
+          ) || die;
+
+if (!exists($opts{'d'})) {
+    croak("you must supply a database file name with the -d flag");
+}
+
+if (-f $opts{'d'}) {
+    croak("refusing to delete existing database; please delete it first");
+}
+
+our %config;
+read_config($opts{'c'});
+
+# pull out the various data keys
+my $key         = $config{'key'};
+my $parameters  = config_array('parameters');
+my $extras      = config_array('extras');
+
+# create the table creation string
+my $dbcreate = "create table data (cgipid    int, timestamp int, $key      varchar(2096), ";
+
+foreach my $parameter (@$parameters, @$extras) {
+    $dbcreate .= "$parameter varchar(2096), ";
+}
+
+$dbcreate =~ s/, $/)/;
+
+print "$dbcreate\n";
+
+# actually perform the connection and creation
+my $dbh = DBI->connect("$opts{D}$opts{d}");
+$dbh->do($dbcreate);
+
+#### WARNING: Must Match Copy in trend-tracker.cgi
+#             (to keep that file self-contained, we duplicate it there)
+sub read_config {
+    my ($file) = @_;
+    my $fh = new IO::File;
+    if (! -f $file || !$fh->open($file)) {
+	Error("failed to open the config file: $file");
+    }
+
+    while(<$fh>) {
+	next if (/^\s*#/);
+	next if (/^\s*$/);
+	Error ("Illegal configuration directive: $_") if (! /:/);
+	
+	my ($key, $value) = /^\s*([^:]+):\s*(.*)/;
+	$config{$key} = $value;
+    }
+}
+
+# splits a config token into separate pieces; Default separation is by comma
+sub config_array {
+    my ($token, $separator) = @_;
+
+    return []          if (!exists($config{$token}));
+    $separator = ","   if (!defined($separator));
+
+    my @results = split(/$separator\s*/, $config{$token});
+    return \@results;
+}

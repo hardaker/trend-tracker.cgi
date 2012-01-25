@@ -112,7 +112,7 @@ sub handle_submit {
 	}
 
 	$count++;
-	$sth->execute(@values);
+	$sth->execute(@values) unless ($cgi->param('__TESTONLY__'));
     }
 
     if ($config{'logaddress'}) {
@@ -233,6 +233,32 @@ trend-tracker.cgi -- capture and analyize submitted data over time
  start collecting data.
 
  Run the trend-analysis tool to analyize the data
+
+=head1 SUBMITTING DATA
+
+Data should be submitted to the script using standard http GET or POST
+methods.  Included in the data should be the following keywords, in
+addition to your own data:
+
+=over
+
+=item type
+
+This value should be set to 'submit' in order to submit data to the database.
+
+=item data
+
+If you're supporting collecting data into multiple tables using a
+single CGI script (not recommended), this can be used to select
+between the different tables.
+
+=item __TESTONLY__
+
+This is a testing variable that should be set to a non-zero value if
+the data shouln't actually be submitted to the database but everything
+else should be done.
+
+=back
 
 =head1 EXAMPLE CONFIGURATION FILE
 

@@ -5,16 +5,13 @@ use strict;
 use Carp;
 use IO::File;
 
-use Getopt::GUI::Long;
-Getopt::GUI::Long::Configure(qw(display_help no_ignore_case capture_output no_gui));
-
 my %opts = ('d' => 'trend-tracker.sqlite',
 	    'c' => 'trend-tracker.config',
 	    'D' => 'DBI:SQLite:dbname=');
-GetOptions(\%opts,
-	   ["c|config-file=s", "Config file to read"],
-	   ['t|table=s',       'Database table name'],
-          ) || die;
+LocalGetOptions(\%opts,
+		["c|config-file=s", "Config file to read"],
+		['t|table=s',       'Database table name'],
+    ) || die;
 
 our %config;
 read_config($opts{'c'});

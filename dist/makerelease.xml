@@ -92,7 +92,7 @@
 	<command>mkdir trend-tracker.cgi-{VERSION}</command>
 	<command>cp -pr createdb trend-analysis README.org trend-tracker.cgi trend-tracker.config trend-tracker.cgi-{VERSION}</command>
 
-	<command>pod2man trend-tracker.cgi &gt; trend-tracker.cgi-{VERSION}/trend-tracker.cgi.5</command>
+	<command>pod2man trend-tracker.cgi &gt; trend-tracker.cgi-{VERSION}/trend-tracker.cgi.1</command>
 	<command>pod2html trend-tracker.cgi &gt; trend-tracker.cgi-{VERSION}/trend-tracker.cgi.html</command>
 
 	<command>pod2man trend-analysis &gt; trend-tracker.cgi-{VERSION}/trend-analysis.1</command>

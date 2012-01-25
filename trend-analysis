@@ -1,0 +1,159 @@
+#!/usr/bin/perl
+
+use DBI;
+use strict;
+use Carp;
+use IO::File;
+use Data::Dumper;
+
+use Getopt::GUI::Long;
+Getopt::GUI::Long::Configure(qw(display_help no_ignore_case capture_output no_gui));
+
+my %opts = ('d' => 'trend-tracker.sqlite',
+	    'c' => 'trend-tracker.config',
+	    'D' => 'DBI:SQLite:dbname=');
+my %config;
+
+LocalGetOptions(\%opts,
+	   ["c|config-file=s", "Config file to read"],
+	   ['t|table=s',       'Database table name'],
+          ) || die;
+
+read_config($opts{'c'});
+
+# pull out the various data keys
+my $key         = $config{'key'};
+my $parameters  = config_array('parameters');
+my $extras      = config_array('extras');
+
+my $table       = $opts{'t'} || $config{'table'} || "data" ; 
+
+# actually perform the connection and creation
+my $dbh = DBI->connect($config{'database'});
+
+# generate a report of things that changed
+my $serverh = $dbh->prepare("select distinct(server) from $table");
+my $serverlist = $dbh->selectall_arrayref("select distinct(server), count(server) from $table");
+print Dumper($serverlist);
+
+#######################################################################
+# general routines
+#
+#### WARNING: Must Match Copy in createdb/trend-tracker.cgi
+#             (to keep this file self-contained, we duplicate it here)
+sub read_config {
+    my ($file) = @_;
+    my $fh = new IO::File;
+    if (! -f $file || !$fh->open($file)) {
+	Error("failed to open the config file: $file");
+    }
+
+    while(<$fh>) {
+	next if (/^\s*#/);
+	next if (/^\s*$/);
+	Error ("Illegal configuration directive: $_") if (! /:/);
+	
+	my ($key, $value) = /^\s*([^:]+):\s*(.*)/;
+	if ($key eq 'include') {
+	    read_config($value);
+	} else {
+	    $config{$key} = $value;
+	}
+    }
+}
+
+# splits a config token into separate pieces; Default separation is by comma
+sub config_array {
+    my ($token, $separator) = @_;
+
+    return []          if (!exists($config{$token}));
+    $separator = ","   if (!defined($separator));
+
+    my @results = split(/$separator\s*/, $config{$token});
+    return \@results;
+}
+
+######################################################################
+# getopt::gui::long wrapper
+#
+sub LocalGetOptions {
+    if (eval {require Getopt::GUI::Long;}) {
+	import Getopt::GUI::Long;
+	# optional configure call
+	Getopt::GUI::Long::Configure(qw(display_help no_ignore_case capture_output no_gui));
+	return GetOptions(@_);
+    }
+    require Getopt::Long;
+    import Getopt::Long;
+    # optional configure call
+    Getopt::Long::Configure(qw(auto_help no_ignore_case));
+    GetOptions(LocalOptionsMap(@_));
+}
+
+sub LocalOptionsMap {
+    my ($st, $cb, @opts) = ((ref($_[0]) eq 'HASH')
+			    ? (1, 1, $_[0]) : (0, 2));
+    for (my $i = $st; $i <= $#_; $i += $cb) {
+	if ($_[$i]) {
+	    next if (ref($_[$i]) eq 'ARRAY' && $_[$i][0] =~ /^GUI:/);
+	    push @opts, ((ref($_[$i]) eq 'ARRAY') ? $_[$i][0] : $_[$i]);
+	    push @opts, $_[$i+1] if ($cb == 2);
+	}
+    }
+    return @opts;
+}
+
+=pod
+
+=head1 NAME
+
+trend-analysis -- analyize the results collected by trend-tracker.cgi
+
+=head1 SYNOPSIS
+
+ # trend-analysis -c trend-tracker.config
+
+=head1 DESCRIPTION
+
+The B<trend-analysis> is used to look at the database filled by the
+trend-tracker.cgi script and format results from it.
+
+XXX: Currently this script does nothing but will in the future
+
+=head1 OPTIONS
+
+=over
+
+=item  -c STRING
+
+
+
+=item  --config-file=STRING
+
+Config file to read
+
+=item  -t STRING
+
+
+
+=item  --table=STRING
+
+Database table name
+
+=back
+
+
+=head1 SEE ALSO
+
+trend-tracker.cgi(1), createdb(1)
+
+=head1 AUTHOR
+
+Wes Hardaker E<lt>opensource AT hardakers DOT netE<gt>
+
+=head1 COPYRIGHT and LICENSE
+
+Copyright (c) 2012 Wes Hardaker
+
+All rights reserved.  This program is free software; you may
+redistribute it and/or modify it under the same terms as Perl itself.

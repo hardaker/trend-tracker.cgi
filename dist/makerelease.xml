@@ -92,9 +92,9 @@
 	<command>mkdir trend-tracker.cgi-{VERSION}</command>
 	<command>cp -pr createdb trend-analysis README.org trend-tracker.cgi trend-tracker.config trend-tracker.cgi-{VERSION}</command>
 	<command>pod2man trend-tracker.cgi &gt; trend-tracker.cgi-{VERSION}/trend-tracker.cgi.5</command>
-	<command>pod2html trend-tracker.cgi &gt; trend-tracker.cgi-{VERSION}/trend-tracker.html</command>
+	<command>pod2html trend-tracker.cgi &gt; trend-tracker.cgi-{VERSION}/trend-tracker.cgi.html</command>
 	<command>pod2man trend-analysis &gt; trend-tracker.cgi-{VERSION}/trend-analysis.5</command>
-	<command>pod2html trend-analysis &gt; trend-tracker.cgi-{VERSION}/trend-tracker.html</command>
+	<command>pod2html trend-analysis &gt; trend-tracker.cgi-{VERSION}/trend-analysis.html</command>
 	<command>pod2man createdb &gt; trend-tracker.cgi-{VERSION}/createdb.5</command>
 	<command>pod2html createdb &gt; trend-tracker.cgi-{VERSION}/trend-tracker.html</command>
 	<!-- <comand>...</command> ; use mr-command1 -->
@@ -110,6 +110,18 @@
       <commands>
 	<command>tar czf trend-tracker.cgi-{VERSION}.tar.gz trend-tracker.cgi-{VERSION}</command>
 	<command>zip -r trend-tracker.cgi-{VERSION}.zip trend-tracker.cgi-{VERSION}</command>
+	<!-- <comand>...</command> ; use mr-command1 -->
+      </commands>
+    </step>
+
+    <step type="command" name="dist:sources" title="copy the sources in"
+	  pause="0" mandatory="0">
+      <text>
+	Copy the sources it the distribution location
+      </text>
+      <commands>
+	<command>scp trend-tracker.cgi-{VERSION}.zip trend-tracker.cgi-{VERSION}.tar.gz dh:hardakers.net/code/trend-tracker.cgi/download/  </command>
+	<command>scp trend-tracker.cgi-{VERSION}/trend-tracker.cgi.html trend-tracker.cgi-{VERSION}/trend-analysis.html trend-tracker.cgi-{VERSION}/trend-tracker.html dh:hardakers.net/code/trend-tracker.cgi/  </command>
 	<!-- <comand>...</command> ; use mr-command1 -->
       </commands>
     </step>

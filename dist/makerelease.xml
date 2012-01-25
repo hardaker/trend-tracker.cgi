@@ -27,13 +27,12 @@
 	    replace="trend-tracker version: {VERSION}">
 	  <files>
 	    <file>createdb</file>
-	    <file>trend-analisis</file>
+	    <file>trend-analysis</file>
 	  </files>
 	</modify>
-	<!-- <modify>...</modify> ; use mr-modify1 -->
 	<modify
-	    find="VERSION *= *[&quot;'](.*)[&quot;'];"
-	    replace="VERSION = '{VERSION}'">
+	    find="VERSION = '(.*)';"
+	    replace="VERSION = '{VERSION}';">
 	  <files>
 	    <file>trend-tracker.cgi</file>
 	    

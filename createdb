@@ -99,3 +99,46 @@ sub LocalOptionsMap {
     }
     return @opts;
 }
+
+=pod
+
+=head1 NAME
+
+createdb -- create the needed sql database for storing trend-tracker data
+
+=head1 SYNOPSIS
+
+ # createdb -c trend-tracker.config
+
+=head1 DESCRIPTION
+
+The B<createdb> is used to create a database table for storing the
+collected data in.  It will create a table, named based on the .config
+file or the command line -t flag, with the following columns:
+
+ - cgipid        int
+ - timestamp     int
+ - remoteaddress varchar(2096)
+ - KEY           varchar(2096)
+ - PARAMETER1    varchar(2096)
+ - PARAMETER2    varchar(2096)
+ - ...           varchar(2096)
+
+The trend-tracker.cgi script will then store the data into this table
+when it runs to collect data, and the trend-analysis script will read
+and interpret the results.
+
+=head1 SEE ALSO
+
+trend-tracker.cgi(1), trend-analysis(1)
+
+=head1 AUTHOR
+
+Wes Hardaker E<lt>opensource AT hardakers DOT netE<gt>
+
+=head1 COPYRIGHT and LICENSE
+
+Copyright (c) 2012 Wes Hardaker
+
+All rights reserved.  This program is free software; you may
+redistribute it and/or modify it under the same terms as Perl itself.

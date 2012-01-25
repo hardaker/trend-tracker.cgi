@@ -1,0 +1,119 @@
+<!-- this is a makerelease script: http://github.com/hardaker/makerelease -->
+<makerelease>
+  <steps>
+    <step type="prompt" name="startup:versionnumber" title="Enter the version number"
+    	  mandatory="1"
+    	  parameter="VERSION"
+    	  prompt="Enter a version number:">
+      <text>
+    	This version number will be used in multiple places as we progress
+      </text>
+    </step>
+    <step type="Informational"	name="startup:info" title="Startup Info"
+	  pause="0" mandatory="0">
+      <text>
+	We'll use this as the version number: {VERSION}
+      </text>
+    </step>
+
+    <step type="modify" title="modify files for the new version"
+	  stepname="versionmodify">
+      <text>
+	Modifies the files to update it for a new version
+      </text>
+      <modifications>
+	<modify
+	    find="trend-tracker version: [\d\.]+"
+	    replace="trend-tracker version: {VERSION}">
+	  <files>
+	    <file>createdb</file>
+	    <file>trend-analisis</file>
+	  </files>
+	</modify>
+	<!-- <modify>...</modify> ; use mr-modify1 -->
+	<modify
+	    find="VERSION *= *[&quot;'](.*)[&quot;'];"
+	    replace="VERSION = '{VERSION}'">
+	  <files>
+	    <file>trend-tracker.cgi</file>
+	    
+	  </files>
+	</modify>
+
+      </modifications>
+    </step>
+
+    <step type="command" name="git:diff" title="show version differences"
+	  pause="0" mandatory="0">
+      <text>
+	Show the difference in version changes
+      </text>
+      <commands>
+	<command>git diff</command>
+	
+	<!-- <comand>...</command> ; use mr-command1 -->
+      </commands>
+    </step>
+
+
+    <step type="command" name="git:commit" title="commit the version changes"
+	  interactive="1" mandatory="0">
+      <text>
+	Commit the differences after checking diff
+      </text>
+      <commands>
+	<command>git commit -m "version update to {VERSION}" -a</command>
+	
+	<!-- <comand>...</command> ; use mr-command1 -->
+      </commands>
+    </step>
+
+
+
+    <step type="command" name="package:zip" title="tag it in git"
+	  interactive="1" mandatory="0">
+      <text>
+	Tag the version in git
+      </text>
+      <commands>
+	<command>git tag {VERSION}</command>
+
+	<!-- <comand>...</command> ; use mr-command1 -->
+      </commands>
+    </step>
+
+
+    <step type="command" name="copy the files" title="Copying files into place"
+	  pause="0" mandatory="0">
+      <text>
+	Creates the directory and puts the files in place
+      </text>
+      <commands>
+	<command>mkdir trend-tracker.cgi-{VERSION}</command>
+	<command>cp -pr createdb trend-analysis README.org trend-tracker.cgi trend-tracker.config trend-tracker.cgi-{VERSION}</command>
+	<command>pod2man trend-tracker.cgi &gt; trend-tracker.cgi-{VERSION}/trend-tracker.cgi.5</command>
+	<command>pod2html trend-tracker.cgi &gt; trend-tracker.cgi-{VERSION}/trend-tracker.html</command>
+	<command>pod2man trend-analysis &gt; trend-tracker.cgi-{VERSION}/trend-analysis.5</command>
+	<command>pod2html trend-analysis &gt; trend-tracker.cgi-{VERSION}/trend-tracker.html</command>
+	<command>pod2man createdb &gt; trend-tracker.cgi-{VERSION}/createdb.5</command>
+	<command>pod2html createdb &gt; trend-tracker.cgi-{VERSION}/trend-tracker.html</command>
+	<!-- <comand>...</command> ; use mr-command1 -->
+      </commands>
+
+    </step>
+    
+    <step type="command" name="package:tar" title="Tar it up"
+	  pause="0" mandatory="0">
+      <text>
+	Creating the .tar.gz and .zip file
+      </text>
+      <commands>
+	<command>tar czf trend-tracker.cgi-{VERSION}.tar.gz trend-tracker.cgi-{VERSION}</command>
+	<command>zip -r trend-tracker.cgi-{VERSION}.zip trend-tracker.cgi-{VERSION}</command>
+	<!-- <comand>...</command> ; use mr-command1 -->
+      </commands>
+    </step>
+
+
+  </steps>
+</makerelease>

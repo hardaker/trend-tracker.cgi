@@ -135,7 +135,7 @@
       </text>
       <commands>
 	<command>scp trend-tracker.cgi-{VERSION}.zip trend-tracker.cgi-{VERSION}.tar.gz dh:hardakers.net/code/trend-tracker.cgi/download/  </command>
-	<command>scp trend-tracker.cgi-{VERSION}/trend-tracker.cgi.html trend-tracker.cgi-{VERSION}/trend-analysis.html trend-tracker.cgi-{VERSION}/trend-tracker.html dh:hardakers.net/code/trend-tracker.cgi/  </command>
+	<command>scp trend-tracker.cgi-{VERSION}/trend-tracker.cgi.html trend-tracker.cgi-{VERSION}/trend-analysis.html trend-tracker.cgi-{VERSION}/createdb.html dh:hardakers.net/code/trend-tracker.cgi/  </command>
 	<!-- <comand>...</command> ; use mr-command1 -->
       </commands>
     </step>

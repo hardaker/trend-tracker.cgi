@@ -232,7 +232,7 @@ trend-tracker.cgi -- capture and analyize submitted data over time
  web-accessible directory and point your application at it to
  start collecting data.
 
- Run the trendanalysis tool to analyize the data
+ Run the trend-analysis tool to analyize the data
 
 =head1 EXAMPLE CONFIGURATION FILE
 
@@ -335,6 +335,10 @@ web-accessible area.
 This will likely only work with apache as the script expects the
 SCRIPT_FILENAME environment variable to be set, which may be an
 apache-ism.
+
+=head1 SEE ALSO
+
+createdb(1), trend-analysis(1)
 
 =head1 TODO
 

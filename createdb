@@ -13,6 +13,7 @@ my %opts = ('d' => 'trend-tracker.sqlite',
 	    'D' => 'DBI:SQLite:dbname=');
 GetOptions(\%opts,
 	   ["c|config-file=s", "Config file to read"],
+	   ['t|table=s',      a 'Database table name'],
           ) || die;
 
 our %config;
@@ -23,16 +24,16 @@ my $key         = $config{'key'};
 my $parameters  = config_array('parameters');
 my $extras      = config_array('extras');
 
+my $table       = $opts{'t'} || $config{'table'} || "data" ; 
+
 # create the table creation string
-my $dbcreate = "create table data (cgipid int, timestamp int, remoteaddress varchar(2096), $key varchar(2096), ";
+my $dbcreate = "create table $table (cgipid int, timestamp int, remoteaddress varchar(2096), $key varchar(2096), ";
 
 foreach my $parameter (@$parameters, @$extras) {
     $dbcreate .= "$parameter varchar(2096), ";
 }
 
 $dbcreate =~ s/, $/)/;
-
-print "$dbcreate\n";
 
 # actually perform the connection and creation
 my $dbh = DBI->connect($config{'database'});

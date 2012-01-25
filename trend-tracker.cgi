@@ -51,8 +51,13 @@ sub handle_submit {
     my $extravalues = $config{'extravalues'};
     my $keyvalues   = $config{'keyvalues'};
 
+    my $cgitable    = $cgi->param('data');
+    $cgitable      =~ s/[^a-zA-Z]//;
+    # config always wins:
+    my $table       = $config{'table'} || $cgitable || "data" ; 
+
     # create the insert statment and prepare it for use
-    my $statement = "insert into data (cgipid, timestamp, remoteaddress, $key, " . 
+    my $statement = "insert into $table (cgipid, timestamp, remoteaddress, $key, " . 
 	join(", ", @$parameters) . ", " .
 	join(", ", @$extras) .
 	") values(" .

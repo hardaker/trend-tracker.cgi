@@ -1,0 +1,35 @@
+Trend-Tracker CGI Script
+
+* Overview
+
+  The trend tracker CGI script and related software are designed to do a
+  few things:
+
+  + Collect data from remote applications
+  + Store the data into a database (eg, sqlite)
+  + analyze the data for:
+    + summary information, eg: percentages of data matching condition X
+    + changes in data over time, eg: condition X has changed from 10% to 75%
+
+  To do this, it contains a configurable engine that can save data and
+  then analyze it.  See the trend-tracker.config file for a sample
+  configuration file.  Once a configuration file has been created
+  tailored to your needs, run the createdb script to create the initial
+  database.  Then simply install the cgi script and off it goes
+  recording data submitted to it.
+
+* Installation Steps
+
+  + copy the (self-contained) trend-tracker.cgi file into the directory
+    you want it accessed form and ensure your http server can execute
+    it properly
+  + Create a trend-tracker.config file and place it into the same
+    directory.
+  + Run ./createdb -c trend-tracker.config to create the database
+  + Modify the application of interest to submit data to it
+
+* Regular maintenance:
+
+  + Run the trend-analysis script and it will create a .html report
+    file.  Run 'trend-analysis -h' for details on options that can be
+    passed to it.

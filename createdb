@@ -128,6 +128,28 @@ The trend-tracker.cgi script will then store the data into this table
 when it runs to collect data, and the trend-analysis script will read
 and interpret the results.
 
+=head1 OPTIONS
+
+=over
+
+=item  -c STRING
+
+
+
+=item  --config-file=STRING
+
+Config file to read
+
+=item  -t STRING
+
+
+
+=item  --table=STRING
+
+Database table name
+
+=back
+
 =head1 SEE ALSO
 
 trend-tracker.cgi(1), trend-analysis(1)

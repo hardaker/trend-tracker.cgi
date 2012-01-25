@@ -70,7 +70,7 @@
 
 
 
-    <step type="command" name="package:zip" title="tag it in git"
+    <step type="command" name="git:tag" title="tag it in git"
 	  interactive="1" mandatory="0">
       <text>
 	Tag the version in git
@@ -78,6 +78,18 @@
       <commands>
 	<command>git tag {VERSION}</command>
 
+	<!-- <comand>...</command> ; use mr-command1 -->
+      </commands>
+    </step>
+
+    <step type="command" name="git:push" title="Title"
+	  pause="1or0" mandatory="1or0">
+      <text>
+	Push it upstream
+      </text>
+      <commands>
+	<command>git push origin master</command>
+	
 	<!-- <comand>...</command> ; use mr-command1 -->
       </commands>
     </step>

@@ -109,7 +109,6 @@ sub handle_submit {
 	    push @values, $val;
 	}
 
-	print "here: $statement" . join(", ", @values) . "\n";
 	$count++;
 	$sth->execute(@values);
     }

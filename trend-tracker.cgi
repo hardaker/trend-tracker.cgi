@@ -166,7 +166,11 @@ sub read_config {
 	Error ("Illegal configuration directive: $_") if (! /:/);
 	
 	my ($key, $value) = /^\s*([^:]+):\s*(.*)/;
-	$config{$key} = $value;
+	if ($key eq 'include') {
+	    read_config($value);
+	} else {
+	    $config{$key} = $value;
+	}
     }
 }
 

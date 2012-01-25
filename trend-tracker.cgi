@@ -10,6 +10,8 @@ use DBI;
 our %config;
 our $dbh;
 
+our $VERSION="0.1";
+
 my $runpath = $ENV{'SCRIPT_FILENAME'};
 $runpath =~ s/(.*)\/(.*)/$1/;
 if (length($runpath) == 0 || ! -d $runpath) {
@@ -213,3 +215,138 @@ sub Error {
     print "<h1>Internal Error; please contact an administrator</h1>\n";
     exit 0;
 }
+
+=pod
+
+=head1 NAME
+
+trend-tracker.cgi -- capture and analyize submitted data over time
+
+=head1 SYNOPSIS
+
+ Create a trend-tracker.config file using the example file
+
+ # ./createdb -c trend-tracker.config
+
+ Then copy the database, the .cgi script, and the config file into a
+ web-accessible directory and point your application at it to
+ start collecting data.
+
+ Run the trendanalysis tool to analyize the data
+
+=head1 EXAMPLE CONFIGURATION FILE
+
+The following is an example configuration file that documents how the
+system is intended to work.
+
+  #
+  # include: /etc/trend-tracker.config
+  #      Allows you to include files elsewhere on the system.  This is
+  #      actually the recommended way to store configuration, as it
+  #      hides the rest of the configuration file outside the
+  #      web-searchable areas.  Instead, put the rest of this file in something
+  #      like /etc/trend-tracker.config and include that instead.
+  include: /etc/trend-tracker.config
+  #
+  # database: DBI:SQLite:dbname=trend-tracker.sqlite3
+  #      The perl DBI database handle to use for the connection
+  database: DBI:SQLite:dbname=trend-tracker.sqlite3
+  #
+  # table:    mydata
+  #      Names the table where the data is stored; useful if data is
+  #      coming into multiple data sets.  If this isn't set, it's pulled
+  #      from the incoming 'table' parameter.  If that is unset, it
+  #      assumes "data" is right.
+  table: mydata
+  #
+  # key: foo
+  #      this field is used to determine if there is data for a given numeric
+  #      slot.  EG, if the key is "foo" then the data collection engine will
+  #      look for "foo0", "foo1", ... and will collect data until one is found
+  #      to be empty.
+  #
+  key:         who
+  #
+  # parameters: name, supercool, gravity
+  #      This collects the list of parameters to collect for each of the keys
+  #      found.  For example, if the above three parameters are listed, then
+  #      the data collection engine will look for name0, supercool0, gravity0,
+  #      and so on, for each key found
+  parameters:  favoritecolor, favoritefood, favoritedrink
+  #
+  # extras: dataversion, comment
+  #      Contains a list of 'singular' extra values to be collected as well.
+  #
+  extras:      dataversion,surveyversion
+  #
+  # values: regexp
+  #      This defines a regular expression that each of the parameters
+  #      is allowed to match against.  If not set, then any value will
+  #      be assumed to be ok.  Make sure to bound the expression by ^
+  #      and $ if it must match exactly from beginning to end.
+  values:      ^([a-zA-Z0-9 ])$
+  keyvalues:   ^[a-zA-Z ])$
+  extravalues: ^[0-9\.]+$
+  #
+  # logaddress: sha1
+  #      Either a 1 value to indicate logging the incoming connection address
+  #      with the data, or a sha1 hash if you want to anonomize the data a bit
+  #      before storing it
+  logaddress:  sha1
+  #startat:     0
+  #
+  # thankyounote: <h2>Thank you</h2> <p>so much for your submission!</p>
+  #      If exits, this prints a thank you message for the data they submitted
+  thankyounote: <h2>Thank you</h2> <p>so much for your submission!</p>
+  #
+  # thankyounotefile:  myfile.html
+  #      If defined, this dumps the contents of the file to the output
+  #      when a submission is received.  Note that the contents will be
+  #      printed after the 'thankyounote' token contents.  Either, both
+  #      or none of these two directives can be used.
+  thankyounotefile:  myfile.html
+
+
+=head1 INSTALLING
+
+Typically this can be installed by simply copying it to the directory
+it should serve and renaming it to I<index.cgi>
+(e.g. I</var/www/my-server/download/index.cgi>) .  Make sure to make
+it B<executable> and make sure to create a I<trend-watcher.config>
+file for it to read.
+
+You may need to set the I<ExecCGI> option in an apache I<.htaccess>
+file or I<httpd.conf> file as well:
+
+  Options +ExecCGI
+
+In addition, if your server doesn't support the .cgi extension, make sure this
+line is uncommented in your I<httpd.conf> file:
+
+  AddHandler cgi-script .cgi
+
+=head1 NOTES
+
+If you care about the data and don't want the details exposed for any
+reason, it's recommended that you use the I<include> directive and
+place the main configuration file and database file outside the
+web-accessible area.
+
+This will likely only work with apache as the script expects the
+SCRIPT_FILENAME environment variable to be set, which may be an
+apache-ism.
+
+=head1 TODO
+
+* Finish (start) the analysis tool.
+
+=head1 AUTHOR
+
+Wes Hardaker E<lt>opensource AT hardakers DOT netE<gt>
+
+=head1 COPYRIGHT and LICENSE
+
+Copyright (c) 2012 Wes Hardaker
+
+All rights reserved.  This program is free software; you may
+redistribute it and/or modify it under the same terms as Perl itself.

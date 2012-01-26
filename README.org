@@ -20,6 +20,10 @@ Trend-Tracker CGI Script
 
 * Installation Steps
 
+  + Either grab a recent copy from github at:
+      http://www.github.com/hardaker/trendtracker.cgi
+    Or a snapshot release from:
+      http://www.hardakers.net/code/trendtracker.cgi/
   + copy the (self-contained) trend-tracker.cgi file into the directory
     you want it accessed form and ensure your http server can execute
     it properly

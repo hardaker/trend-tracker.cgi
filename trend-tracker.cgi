@@ -140,9 +140,10 @@ sub handle_submit {
 }
 
 sub init_db {
-    $dbh = DBI->connect("$config{'database'}");
+    $dbh = DBI->connect("$config{'database'}",
+			$config{'dbuser'}, $config{'dbpassword'});
     if (!$dbh) {
-	Erorr("Failed to connect to the database");
+	Error("Failed to connect to the database");
     }
 }
 

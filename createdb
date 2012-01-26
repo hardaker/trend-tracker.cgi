@@ -34,7 +34,12 @@ foreach my $parameter (@$parameters, @$extras) {
 $dbcreate =~ s/, $/)/;
 
 # actually perform the connection and creation
-my $dbh = DBI->connect($config{'database'});
+my $dbh = DBI->connect($config{'database'},
+		       $config{'dbuser'}, $config{'dbpassword'});
+
+$dbh->do("create table trendTrackerParameters
+                 (name varchar(255), value varchar(1024))");
+$dbh->do("insert into trendTrackerParameters values('dbversion', '1')");
 $dbh->do($dbcreate);
 
 #### WARNING: Must Match Copy in trend-tracker.cgi

@@ -119,7 +119,7 @@ sub handle_submit {
 	my $addr = $cgi->remote_addr();
 	if (lc($config{'logaddress'}) eq "sha1") {
 	    eval 'require Digest::SHA1';
-	    $addr = Digest::SHA1::sha1_base64($addr);
+	    $addr = Digest::SHA1::sha1_hex($addr);
 	}
     }
     

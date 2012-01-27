@@ -15,7 +15,7 @@ my %opts = ('d' => 'trend-tracker.sqlite',
 my %config;
 
 LocalGetOptions(\%opts,
-	   ['GUI:VERSION',     "trend-tracker version: 0.3"],
+	   ['GUI:VERSION',     "trend-tracker version: 0.4"],
 	   ["c|config-file=s", "Config file to read"],
 	   ['t|table=s',       'Database table name'],
           ) || die;

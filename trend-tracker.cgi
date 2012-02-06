@@ -34,6 +34,10 @@ if ($query_type eq 'submit') {
     handle_report();
 } elsif ($query_type eq 'dump') {
     handle_dump();
+} elsif ($config{'welcomenote'} && -f $config{'welcomenote'}) {
+    open(I, $config{'welcomenote'});
+    while(read(I, my $buffer, 4096) > 0) { print $buffer ; }
+    close(I);
 } else {
     Error("Unknown input parameters");
 }

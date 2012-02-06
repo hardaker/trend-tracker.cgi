@@ -14,6 +14,13 @@ my %opts = ('d' => 'trend-tracker.sqlite',
 	    'D' => 'DBI:SQLite:dbname=');
 my %config;
 
+my @reportlist = qw(number_of_submitter_addresses number_of_resolvers);
+my %reportGenerators =
+    (
+     number_of_submitter_addresses => \&number_of_submitter_addresses,
+     number_of_resolvers =>           \&number_of_resolvers,
+    );
+
 LocalGetOptions(\%opts,
 	   ['GUI:VERSION',     "trend-tracker version: 0.5"],
 	   ["c|config-file=s", "Config file to read"],
@@ -32,10 +39,54 @@ my $table       = $opts{'t'} || $config{'table'} || "data" ;
 # actually perform the connection and creation
 my $dbh = DBI->connect($config{'database'});
 
-# generate a report of things that changed
-my $serverh = $dbh->prepare("select distinct(server) from $table");
-my $serverlist = $dbh->selectall_arrayref("select distinct(server), count(server) from $table");
-print Dumper($serverlist);
+#######################################################################
+# Report handling
+#
+maybePrintFileFromToken('analysisStart');
+
+foreach my $reportName (@reportlist) {
+    if (!exists($reportGenerators{$reportName}) || 
+	ref($reportGenerators{$reportName}) ne 'CODE') {
+	print STDERR "*** failure: report $reportName had no generator.  Typo?\n";
+	exit;
+    }
+    $reportGenerators{$reportName}->();
+}
+
+maybePrintFileFromToken('analysisEnd');
+
+######################################################################
+# Report generators
+#
+sub number_of_submitter_addresses {
+    my (@args) = @_;
+    my $resolverlist = $dbh->selectall_arrayref("select server, count(server) from $table group by server");
+    print "<ul><li>Number of submitting addresses: " . $#$resolverlist . "</li></ul>\n";
+}
+
+sub number_of_resolvers {
+    my (@args) = @_;
+    my $addresslist = $dbh->selectall_arrayref("select remoteaddress, count(remoteaddress) from $table group by remoteaddress");
+    print "<ul><li>Number of servers: " . $#$addresslist . "</li></ul>\n";
+}
+
+######################################################################
+# Utility Functions
+#
+
+sub maybePrintFileFromToken {
+    my ($filetoken) = @_;
+    print "checking:$filetoken\n";
+    if ($config{$filetoken}) {
+	my $tnh = new IO::File;
+	my $buffer;
+	$tnh->open($config{$filetoken});
+	while(read($tnh, $buffer, 4096) > 0) {
+	    print $buffer;
+	}
+    }
+}
+
 
 #######################################################################
 # general routines

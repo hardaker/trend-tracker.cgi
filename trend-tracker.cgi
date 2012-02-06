@@ -180,7 +180,7 @@ sub read_config {
 	if ($key eq 'include') {
 	    read_config($value);
 	} else {
-	    $config{$key} = $value;
+	    $config{lc($key)} = $value;
 	}
     }
 }

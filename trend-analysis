@@ -14,12 +14,17 @@ my %opts = ('d' => 'trend-tracker.sqlite',
 	    'D' => 'DBI:SQLite:dbname=');
 my %config;
 
-my @reportlist = qw(number_of_submitter_addresses number_of_resolvers answer_percentage_breakdown);
+my @reportlist = qw(number_of_submitter_addresses number_of_resolvers
+                    detailed_percentage_breakdown_by_server
+                    detailed_percentage_breakdown_by_submission_address);
 my %reportGenerators =
     (
-     number_of_submitter_addresses => \&number_of_submitter_addresses,
-     number_of_resolvers =>           \&number_of_resolvers,
-     answer_percentage_breakdown =>   \&answer_percentage_breakdown,
+     number_of_submitter_addresses => 		\&number_of_submitter_addresses,
+     number_of_resolvers =>           		\&number_of_resolvers,
+     detailed_percentage_breakdown_by_server => 
+                \&detailed_percentage_breakdown_by_server,
+     detailed_percentage_breakdown_by_submission_address =>
+                \&detailed_percentage_breakdown_by_submission_address,
     );
 
 LocalGetOptions(\%opts,
@@ -75,16 +80,49 @@ sub number_of_resolvers {
     print "<ul><li>Number of submitting addresses: " . $#$addresslist . "</li></ul>\n";
 }
 
-sub answer_percentage_breakdown {
+sub detailed_percentage_breakdown_by_server {
     my (@args) = @_;
     my @parameters = @{config_array('parameters')};
 
+    print "<h2>Answer Percentages by Server</h2>";
+
     foreach my $parameter (@parameters) {
-	my $data = $dbh->selectall_arrayref("select $parameter,count($parameter) from (select $parameter, server, count(server) from $table group by server,$parameter) group by $parameter");
-	print "<h2>$parameter</h2>\n";
+	my $data = $dbh->selectall_arrayref(
+	    "select $parameter,count($parameter)
+               from (select $parameter, server, count(server)
+                       from $table
+                      group by server,$parameter)
+             group by $parameter
+             order by $parameter");
+	print "<h3>$parameter</h3>\n";
 	print "<table>\n";
 	foreach my $row (@$data) {
-	    printRow(@$row);
+	    my $value = shift @$row;
+	    printRow(valueMap($parameter, $value), @$row);
+	}
+	print "</table>\n";
+    }
+}
+
+sub detailed_percentage_breakdown_by_submission_address {
+    my (@args) = @_;
+    my @parameters = @{config_array('parameters')};
+
+    print "<h2>Answer Percentages by Submission Address</h2>";
+
+    foreach my $parameter (@parameters) {
+	my $data = $dbh->selectall_arrayref(
+	    "select $parameter,count($parameter)
+               from (select $parameter, remoteaddress, count(remoteaddress)
+                       from $table
+                      group by remoteaddress,$parameter)
+             group by $parameter
+             order by $parameter");
+	print "<h3>$parameter</h3>\n";
+	print "<table>\n";
+	foreach my $row (@$data) {
+	    my $value = shift @$row;
+	    printRow(valueMap($parameter, $value), @$row);
 	}
 	print "</table>\n";
     }
@@ -96,6 +134,17 @@ sub answer_percentage_breakdown {
 sub printRow {
     my (@rowData) = @_;
     print "<tr><td>" . join("</td><td>", @rowData) . "</td></tr>\n";
+}
+
+sub valueMap {
+    my ($name, $value) = @_;
+    if (exists($config{"value." . $name . "." . $value})) {
+	return $config{"value." . $name . "." . $value};
+    }
+    if (exists($config{"value." . $value})) {
+	return $config{"value." . $value};
+    }
+    return $value;
 }
 
 sub maybePrintFileFromToken {

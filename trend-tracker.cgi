@@ -18,7 +18,7 @@ if (length($runpath) == 0 || ! -d $runpath) {
     Error("Failed to determine initial startup path");
 }
 
-my $configfile = "trend-tracker.config";
+my $configfile = $ENV{'TREND_TRACKER_CONFIG'} || "trend-tracker.config";
 my $configfullpath = "$runpath/$configfile";
 
 # determine what we shoud be doing

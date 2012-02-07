@@ -148,7 +148,14 @@ sub table_percentage_breakdown_by {
     foreach my $value (keys(%completeData)) {
 	print "  <tr><th class=\"trend-tracker-header trend-tracker-left-header\">" . valueMap("----", $value) . "</th>\n";
 	foreach my $parameter (@parameters) {
-	    my $yesNoMaybeClass = $completeData{$value}{$parameter} == 0 ? "trend-tracker-data-zero" : ($completeData{$value}{$parameter} == $totalcount ? "trend-tracker-data-100" : "trend-tracker-data-inbetween");
+	    my $yesNoMaybeClass = 
+		$completeData{$value}{$parameter} == 0 ?
+		"trend-tracker-data-0" :
+		     ($completeData{$value}{$parameter} == $totalcount ?
+                      "trend-tracker-data-100" :
+		      "trend-tracker-data-inbetween");
+	    $yesNoMaybeClass .= " " . $yesNoMaybeClass . "-" 
+		. valueMap("----",$value);
 	    print "<td class=\"trend-tracker-column trend-tracker-raw-number-column $yesNoMaybeClass\">" . ($completeData{$value}{$parameter} || "0") . "</td><td class=\"trend-tracker-column trend-tracker-percentage-column $yesNoMaybeClass\">" .
 		percent($completeData{$value}{$parameter}, $totalcount) .
 		"</td>";

@@ -14,11 +14,14 @@ my %opts = ('d' => 'trend-tracker.sqlite',
 	    'D' => 'DBI:SQLite:dbname=');
 my %config;
 
-my @reportlist = qw(number_of_submitter_addresses number_of_resolvers
+my @reportlist = qw(total_response_count
+                    number_of_submitter_addresses
+                    number_of_resolvers
                     detailed_percentage_breakdown_by_server
                     detailed_percentage_breakdown_by_submission_address);
 my %reportGenerators =
     (
+     total_response_count =>                    \&total_response_count,
      number_of_submitter_addresses => 		\&number_of_submitter_addresses,
      number_of_resolvers =>           		\&number_of_resolvers,
      detailed_percentage_breakdown_by_server => 
@@ -68,16 +71,22 @@ maybePrintFileFromToken('analysisEnd');
 ######################################################################
 # Report generators
 #
+sub total_response_count {
+    my (@args) = @_;
+    my $count = get_total_entry_count();
+    print "<ul><li>Number of entries submitted: $count</li></ul>\n";
+}
+
 sub number_of_submitter_addresses {
     my (@args) = @_;
-    my $resolverlist = $dbh->selectall_arrayref("select server, count(server) from $table group by server");
-    print "<ul><li>Number of servers: " . $#$resolverlist . "</li></ul>\n";
+    my $remoteaddresscount = get_total_remoteaddress();
+    print "<ul><li>Number of submitting addresses: " . $remoteaddresscount . "</li></ul>\n";
 }
 
 sub number_of_resolvers {
     my (@args) = @_;
-    my $addresslist = $dbh->selectall_arrayref("select remoteaddress, count(remoteaddress) from $table group by remoteaddress");
-    print "<ul><li>Number of submitting addresses: " . $#$addresslist . "</li></ul>\n";
+    my $servercount = get_total_server_count();
+    print "<ul><li>Number of servers: " . $servercount . "</li></ul>\n";
 }
 
 sub detailed_percentage_breakdown_by_server {
@@ -126,6 +135,31 @@ sub detailed_percentage_breakdown_by_submission_address {
 	}
 	print "</table>\n";
     }
+}
+
+my $total_count = "";
+sub get_total_entry_count {
+    
+    return $total_count if ($total_count ne "");
+    my $data = $dbh->selectall_arrayref("select count(*) from $table");
+    $total_count = $data->[0][0];
+    return $total_count;
+}
+
+my $total_servers = "";
+sub get_total_server_count {
+    return $total_servers if ($total_servers ne "");
+    my $data = $dbh->selectall_arrayref("select count(distinct(server)) from $table");
+    $total_servers = $data->[0][0];
+    return $total_servers;
+}
+
+my $total_remoteaddress = "";
+sub get_total_remoteaddress {
+    return $total_remoteaddress if ($total_remoteaddress ne "");
+    my $data = $dbh->selectall_arrayref("select count(distinct(remoteaddress)) from $table");
+    $total_remoteaddress = $data->[0][0];
+    return $total_remoteaddress;
 }
 
 ######################################################################

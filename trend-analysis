@@ -14,21 +14,27 @@ my %config;
 my @reportlist = qw(total_response_count
                     number_of_submitter_addresses
                     number_of_resolvers
-                    table_percentage_breakdown_by_server
-                    table_percentage_breakdown_by_submission_address
+                    table_numerical_breakdown_by_server
+                    table_numerical_breakdown_by_submission_address
                    );
-#                    detailed_percentage_breakdown_by_server
-#                    detailed_percentage_breakdown_by_submission_address
+#                    detailed_numerical_breakdown_by_server
+#                    detailed_numerical_breakdown_by_submission_address
+#                    table_percentage_breakdown_by_server
+#                    table_percentage_breakdown_by_submission_address
 
 my %reportGenerators =
     (
      total_response_count =>                    \&total_response_count,
      number_of_submitter_addresses => 		\&number_of_submitter_addresses,
      number_of_resolvers =>           		\&number_of_resolvers,
-     detailed_percentage_breakdown_by_server => 
-                \&detailed_percentage_breakdown_by_server,
-     detailed_percentage_breakdown_by_submission_address =>
-                \&detailed_percentage_breakdown_by_submission_address,
+     detailed_numerical_breakdown_by_server => 
+                \&detailed_numerical_breakdown_by_server,
+     detailed_numerical_breakdown_by_submission_address =>
+                \&detailed_numerical_breakdown_by_submission_address,
+     table_numerical_breakdown_by_server =>
+                \&table_numerical_breakdown_by_server,
+     table_numerical_breakdown_by_submission_address =>
+                \&table_numerical_breakdown_by_submission_address,
      table_percentage_breakdown_by_server =>
                 \&table_percentage_breakdown_by_server,
      table_percentage_breakdown_by_submission_address =>
@@ -96,31 +102,28 @@ sub number_of_resolvers {
 }
 
 sub table_percentage_breakdown_by_server {
-    my (@args) = @_;
-    my @parameters = @{config_array('parameters')};
-
-    my $name = $args[0];
-    my $colname = $args[1];
-    table_percentage_breakdown_by("Server", "server", get_total_server_count());
+    table_numerical_breakdown_by_server(@_, 'percent_only' => 1);
 }
 
 sub table_percentage_breakdown_by_submission_address {
-    my (@args) = @_;
-    my @parameters = @{config_array('parameters')};
-
-    my $name = $args[0];
-    my $colname = $args[1];
-    table_percentage_breakdown_by("Submission Address", "remoteaddress",
-				  get_total_remoteaddress());
+    table_numerical_breakdown_by_submission_address(@_, 'percent_only' => 1);
 }
 
-sub table_percentage_breakdown_by {
+sub table_numerical_breakdown_by_server {
     my (@args) = @_;
-    my @parameters = @{config_array('parameters')};
+    table_numerical_breakdown_by("Server", "server",
+				 get_total_server_count(), @args);
+}
 
-    my $name = $args[0];
-    my $colname = $args[1];
-    my $totalcount = $args[2];
+sub table_numerical_breakdown_by_submission_address {
+    my (@args) = @_;
+    table_numerical_breakdown_by("Submission Address", "remoteaddress",
+				  get_total_remoteaddress(), @args);
+}
+
+sub table_numerical_breakdown_by {
+    my ($name, $colname, $totalcount, %args) = @_;
+    my @parameters = @{config_array('parameters')};
 
     print "<h2 class=\"trend-tracker-header\">Answer Percentages by $name</h2>";
 
@@ -128,13 +131,16 @@ sub table_percentage_breakdown_by {
 
     print "<table id=\"trend-tracker-table-$name\" class=\"trend-tracker-table\">\n";
     print "  <tr><th>&nbsp;</th>";
+
+    my $colspan = "colspan=\"2\"" if ($args{'percent_only'});
+
     foreach my $parameter (@parameters) {
-	print "<th colspan=\"2\" class=\"trend-tracker-top-header trend-tracker-header\">$parameter</th>";
+	print "<th $colspan class=\"trend-tracker-top-header trend-tracker-header\">$parameter</th>";
 	my $data = $dbh->selectall_arrayref(
 	    "select $parameter,count($parameter)
                from (select $parameter, $colname, count($colname)
-                       from $table
-                      group by $colname,$parameter)
+                       from $table as t1
+                      group by $colname,$parameter) as t2
              group by $parameter
              order by $parameter");
 	foreach my $valuerow (@$data) {
@@ -154,7 +160,14 @@ sub table_percentage_breakdown_by {
 		      "trend-tracker-data-inbetween");
 	    $yesNoMaybeClass .= " " . $yesNoMaybeClass . "-" 
 		. valueMap("----",$value);
-	    print "<td class=\"trend-tracker-column trend-tracker-raw-number-column $yesNoMaybeClass\">" . ($completeData{$value}{$parameter} || "0") . "</td><td class=\"trend-tracker-column trend-tracker-percentage-column $yesNoMaybeClass\">" .
+
+	    # print the percentage column
+	    if (!$args{'percent_only'}) {
+		print "<td class=\"trend-tracker-column trend-tracker-raw-number-column $yesNoMaybeClass\">" . ($completeData{$value}{$parameter} || "0") . "</td>";
+	    }
+
+	    # print the row data column
+	    print "<td class=\"trend-tracker-column trend-tracker-percentage-column $yesNoMaybeClass\">" .
 		percent($completeData{$value}{$parameter}, $totalcount) .
 		"</td>";
 	}

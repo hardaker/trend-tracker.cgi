@@ -6,9 +6,6 @@ use Carp;
 use IO::File;
 use Data::Dumper;
 
-use Getopt::GUI::Long;
-Getopt::GUI::Long::Configure(qw(display_help no_ignore_case capture_output no_gui));
-
 my %opts = ('d' => 'trend-tracker.sqlite',
 	    'c' => 'trend-tracker.config',
 	    'D' => 'DBI:SQLite:dbname=');

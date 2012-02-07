@@ -278,6 +278,10 @@ sub percent {
     return sprintf("%02.2f%%", $top * 100 / $bottom);
 }
 
+sub Error {
+    print STDERR "Fatal Error: ", join(" ", @_);
+    exit 1;
+}
 
 #######################################################################
 # general routines

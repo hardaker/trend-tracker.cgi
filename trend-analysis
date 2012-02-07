@@ -17,8 +17,12 @@ my %config;
 my @reportlist = qw(total_response_count
                     number_of_submitter_addresses
                     number_of_resolvers
-                    detailed_percentage_breakdown_by_server
-                    detailed_percentage_breakdown_by_submission_address);
+                    table_percentage_breakdown_by_server
+                    table_percentage_breakdown_by_submission_address
+                   );
+#                    detailed_percentage_breakdown_by_server
+#                    detailed_percentage_breakdown_by_submission_address
+
 my %reportGenerators =
     (
      total_response_count =>                    \&total_response_count,
@@ -28,6 +32,10 @@ my %reportGenerators =
                 \&detailed_percentage_breakdown_by_server,
      detailed_percentage_breakdown_by_submission_address =>
                 \&detailed_percentage_breakdown_by_submission_address,
+     table_percentage_breakdown_by_server =>
+                \&table_percentage_breakdown_by_server,
+     table_percentage_breakdown_by_submission_address =>
+                \&table_percentage_breakdown_by_submission_address,
     );
 
 LocalGetOptions(\%opts,
@@ -89,11 +97,74 @@ sub number_of_resolvers {
     print "<ul><li>Number of servers: " . $servercount . "</li></ul>\n";
 }
 
+sub table_percentage_breakdown_by_server {
+    my (@args) = @_;
+    my @parameters = @{config_array('parameters')};
+
+    my $name = $args[0];
+    my $colname = $args[1];
+    table_percentage_breakdown_by("Server", "server", get_total_server_count());
+}
+
+sub table_percentage_breakdown_by_submission_address {
+    my (@args) = @_;
+    my @parameters = @{config_array('parameters')};
+
+    my $name = $args[0];
+    my $colname = $args[1];
+    table_percentage_breakdown_by("Submission Address", "remoteaddress",
+				  get_total_remoteaddress());
+}
+
+sub table_percentage_breakdown_by {
+    my (@args) = @_;
+    my @parameters = @{config_array('parameters')};
+
+    my $name = $args[0];
+    my $colname = $args[1];
+    my $totalcount = $args[2];
+
+    print "<h2>Answer Percentages by $name</h2>";
+
+    my %completeData;
+
+    print "<table>\n";
+    print "  <tr><th>&nbsp;</th>";
+    foreach my $parameter (@parameters) {
+	print "<th colspan=\"2\">$parameter</th>";
+	my $data = $dbh->selectall_arrayref(
+	    "select $parameter,count($parameter)
+               from (select $parameter, $colname, count($colname)
+                       from $table
+                      group by $colname,$parameter)
+             group by $parameter
+             order by $parameter");
+	foreach my $valuerow (@$data) {
+	    $completeData{$valuerow->[0]}{$parameter} = $valuerow->[1];
+	}
+    }
+    print "  </tr>\n";
+
+    foreach my $value (keys(%completeData)) {
+	print "  <tr><td>" . valueMap("----", $value) . "</td>\n";
+	foreach my $parameter (@parameters) {
+	    print "<td>$completeData{$value}{$parameter}</td><td>" .
+		percent($completeData{$value}{$parameter}, $totalcount) .
+		"</td>";
+	}
+	print "</tr>\n";
+    }
+    print "</table>\n";
+}
+
+
 sub detailed_percentage_breakdown_by_server {
     my (@args) = @_;
     my @parameters = @{config_array('parameters')};
 
     print "<h2>Answer Percentages by Server</h2>";
+
+    my $servers = get_total_server_count();
 
     foreach my $parameter (@parameters) {
 	my $data = $dbh->selectall_arrayref(
@@ -107,7 +178,8 @@ sub detailed_percentage_breakdown_by_server {
 	print "<table>\n";
 	foreach my $row (@$data) {
 	    my $value = shift @$row;
-	    printRow(valueMap($parameter, $value), @$row);
+	    printRow(valueMap($parameter, $value), @$row,
+		     percent($row->[0], $servers));
 	}
 	print "</table>\n";
     }
@@ -118,6 +190,8 @@ sub detailed_percentage_breakdown_by_submission_address {
     my @parameters = @{config_array('parameters')};
 
     print "<h2>Answer Percentages by Submission Address</h2>";
+
+    my $addresses = get_total_remoteaddress();
 
     foreach my $parameter (@parameters) {
 	my $data = $dbh->selectall_arrayref(
@@ -131,7 +205,8 @@ sub detailed_percentage_breakdown_by_submission_address {
 	print "<table>\n";
 	foreach my $row (@$data) {
 	    my $value = shift @$row;
-	    printRow(valueMap($parameter, $value), @$row);
+	    printRow(valueMap($parameter, $value), @$row,
+		     100 * $row->[0] / $addresses);
 	}
 	print "</table>\n";
     }
@@ -191,6 +266,11 @@ sub maybePrintFileFromToken {
 	    print $buffer;
 	}
     }
+}
+
+sub percent {
+    my ($top, $bottom) = @_;
+    return sprintf("%02.2f%%", $top * 100 / $bottom);
 }
 
 

@@ -82,19 +82,19 @@ maybePrintFileFromToken('analysisEnd');
 sub total_response_count {
     my (@args) = @_;
     my $count = get_total_entry_count();
-    print "<ul><li>Number of entries submitted: $count</li></ul>\n";
+    print "<ul id=\"total_response_count\" class=\"trend-tracker-ul\"><li>Number of entries submitted: $count</li></ul>\n";
 }
 
 sub number_of_submitter_addresses {
     my (@args) = @_;
     my $remoteaddresscount = get_total_remoteaddress();
-    print "<ul><li>Number of submitting addresses: " . $remoteaddresscount . "</li></ul>\n";
+    print "<ul id=\"number_of_submitter_addresses\" class=\"trend-tracker-ul\"><li>Number of submitting addresses: " . $remoteaddresscount . "</li></ul>\n";
 }
 
 sub number_of_resolvers {
     my (@args) = @_;
     my $servercount = get_total_server_count();
-    print "<ul><li>Number of servers: " . $servercount . "</li></ul>\n";
+    print "<ul id=\"number_of_resolvers\" class=\"trend-tracker-ul\"><li>Number of servers: " . $servercount . "</li></ul>\n";
 }
 
 sub table_percentage_breakdown_by_server {
@@ -124,14 +124,14 @@ sub table_percentage_breakdown_by {
     my $colname = $args[1];
     my $totalcount = $args[2];
 
-    print "<h2>Answer Percentages by $name</h2>";
+    print "<h2 class=\"trend-tracker-header\">Answer Percentages by $name</h2>";
 
     my %completeData;
 
-    print "<table>\n";
+    print "<table id=\"trend-tracker-table-$name\" class=\"trend-tracker-table\">\n";
     print "  <tr><th>&nbsp;</th>";
     foreach my $parameter (@parameters) {
-	print "<th colspan=\"2\">$parameter</th>";
+	print "<th colspan=\"2\" class=\"trend-tracker-top-header trend-tracker-header\">$parameter</th>";
 	my $data = $dbh->selectall_arrayref(
 	    "select $parameter,count($parameter)
                from (select $parameter, $colname, count($colname)
@@ -146,9 +146,10 @@ sub table_percentage_breakdown_by {
     print "  </tr>\n";
 
     foreach my $value (keys(%completeData)) {
-	print "  <tr><td>" . valueMap("----", $value) . "</td>\n";
+	print "  <tr><th class=\"trend-tracker-header trend-tracker-left-header\">" . valueMap("----", $value) . "</th>\n";
 	foreach my $parameter (@parameters) {
-	    print "<td>$completeData{$value}{$parameter}</td><td>" .
+	    my $yesNoMaybeClass = $completeData{$value}{$parameter} == 0 ? "trend-tracker-data-zero" : ($completeData{$value}{$parameter} == $totalcount ? "trend-tracker-data-100" : "trend-tracker-data-inbetween");
+	    print "<td class=\"trend-tracker-column trend-tracker-raw-number-column $yesNoMaybeClass\">" . ($completeData{$value}{$parameter} || "0") . "</td><td class=\"trend-tracker-column trend-tracker-percentage-column $yesNoMaybeClass\">" .
 		percent($completeData{$value}{$parameter}, $totalcount) .
 		"</td>";
 	}
@@ -162,7 +163,7 @@ sub detailed_percentage_breakdown_by_server {
     my (@args) = @_;
     my @parameters = @{config_array('parameters')};
 
-    print "<h2>Answer Percentages by Server</h2>";
+    print "<h2 class=\"trend-tracker-header\">Answer Percentages by Server</h2>";
 
     my $servers = get_total_server_count();
 
@@ -174,8 +175,8 @@ sub detailed_percentage_breakdown_by_server {
                       group by server,$parameter)
              group by $parameter
              order by $parameter");
-	print "<h3>$parameter</h3>\n";
-	print "<table>\n";
+	print "<h3 class=\"trand-tracker-subheader\">$parameter</h3>\n";
+	print "<table class=\"trend-tracker-table\">\n";
 	foreach my $row (@$data) {
 	    my $value = shift @$row;
 	    printRow(valueMap($parameter, $value), @$row,
@@ -189,7 +190,7 @@ sub detailed_percentage_breakdown_by_submission_address {
     my (@args) = @_;
     my @parameters = @{config_array('parameters')};
 
-    print "<h2>Answer Percentages by Submission Address</h2>";
+    print "<h2 class=\"trend-tracker-header\">Answer Percentages by Submission Address</h2>";
 
     my $addresses = get_total_remoteaddress();
 
@@ -201,8 +202,8 @@ sub detailed_percentage_breakdown_by_submission_address {
                       group by remoteaddress,$parameter)
              group by $parameter
              order by $parameter");
-	print "<h3>$parameter</h3>\n";
-	print "<table>\n";
+	print "<h3 class=\"trand-tracker-subheader\">$parameter</h3>\n";
+	print "<table class=\"trend-tracker-table\">\n";
 	foreach my $row (@$data) {
 	    my $value = shift @$row;
 	    printRow(valueMap($parameter, $value), @$row,

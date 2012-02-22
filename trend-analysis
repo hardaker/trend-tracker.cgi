@@ -132,7 +132,7 @@ sub table_numerical_breakdown_by {
     print "<table id=\"trend-tracker-table-$name\" class=\"trend-tracker-table\">\n";
     print "  <tr><th>&nbsp;</th>";
 
-    my $colspan = "colspan=\"2\"" if ($args{'percent_only'});
+    my $colspan = "colspan=\"2\"" if (!$args{'percent_only'});
 
     foreach my $parameter (@parameters) {
 	print "<th $colspan class=\"trend-tracker-top-header trend-tracker-header\">$parameter</th>";

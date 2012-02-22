@@ -88,6 +88,7 @@
       </text>
       <commands>
 	<command>git push origin master</command>
+	<command>git push --tags origin master</command>
 	
 	<!-- <comand>...</command> ; use mr-command1 -->
       </commands>

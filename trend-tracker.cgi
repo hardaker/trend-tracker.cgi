@@ -35,6 +35,7 @@ if ($query_type eq 'submit') {
 } elsif ($query_type eq 'dump') {
     handle_dump();
 } elsif ($config{'welcomenote'} && -f $config{'welcomenote'}) {
+    print "Content-Type: text/html\n\n";
     open(I, $config{'welcomenote'});
     while(read(I, my $buffer, 4096) > 0) { print $buffer ; }
     close(I);
@@ -102,7 +103,15 @@ sub handle_submit {
         foreach my $parameter (@$parameters) {
 	    my $val = $cgi->param($parameter . $count);
 	    if ($val !~ /$legalvalues/i) {
-		$val = "";
+		# if the value wasn't legal, then either we replace it with a 
+		# blank or disallow the submission to continue.
+		if (defined($config{'allowblanks'}) &&
+		    ($config{'allowblanks'} eq '1' ||
+		     $config{'allowblanks'} eq 'true')) {
+		    $val = "";
+		} else {
+		    Error("Illegal value passed in for $parameter$count");
+		}
 	    }
 	    push @values, $val;
 	}
@@ -110,7 +119,15 @@ sub handle_submit {
 	foreach my $parameter (@$extras) {
 	    my $val = $cgi->param($parameter);
 	    if ($val !~ /$extravalues/i) {
-		$val = "";
+		# if the value wasn't legal, then either we replace it with a 
+		# blank or disallow the submission to continue.
+		if (defined($config{'allowblanks'}) &&
+		    ($config{'allowblanks'} ne '0' ||
+		     $config{'allowblanks'} eq 'true')) {
+		    $val = "";
+		} else {
+		    Error("Illegal value passed in for $parameter$count");
+		}
 	    }
 	    push @values, $val;
 	}
@@ -318,6 +335,14 @@ system is intended to work.
   values:      ^([a-zA-Z0-9 ])$
   keyvalues:   ^[a-zA-Z ])$
   extravalues: ^[0-9\.]+$
+  #
+  # noblanks: true
+  #      If any of the above expressions fail, the default is to not
+  #      collect that row of data at all.  However, if desired the bogus
+  #      data can be replaced by an empty string and inserted.  Set
+  #      allowblanks to '1' in order to make this happen.
+  #
+  allowblanks: false
   #
   # logaddress: sha1
   #      Either a 1 value to indicate logging the incoming connection address

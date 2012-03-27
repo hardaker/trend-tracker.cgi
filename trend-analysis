@@ -5,6 +5,8 @@ use strict;
 use Carp;
 use IO::File;
 use Data::Dumper;
+use GD::Graph::lines;
+use GD::Graph::colour qw(:colours);
 
 my %opts = ('d' => 'trend-tracker.sqlite',
 	    'c' => 'trend-tracker.config',
@@ -39,6 +41,8 @@ my %reportGenerators =
                 \&table_percentage_breakdown_by_server,
      table_percentage_breakdown_by_submission_address =>
                 \&table_percentage_breakdown_by_submission_address,
+     detailed_running_average_by_server =>
+                \&detailed_running_average_by_server,
     );
 
 LocalGetOptions(\%opts,
@@ -319,7 +323,8 @@ sub detailed_running_average_by_server {
 
 	# fill the arrays
 	foreach my $time (keys(%graphData)) {
-	    push @{$coldata[0]}, scalar localtime($time);
+#	    push @{$coldata[0]}, scalar localtime($time);
+	    push @{$coldata[0]}, $time;
 	    my $count = 1;
 	    foreach my $value (@values) {
 		push @{$coldata[$count++]}, $graphData{$time}{$parameter}{$value};
@@ -337,6 +342,8 @@ sub detailed_running_average_by_server {
 	    bgclr => "white",
 	    x_labels_vertical => 1,
 	    legend_placement => 'RT',
+	    x_tick_number => 'auto',
+	    x_number_format => sub { scalar localtime($_[0]); },
 	    );
 	my @legend = @values;
 	map { $_ = valueMap($parameter, $_) } @legend;

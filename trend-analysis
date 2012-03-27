@@ -43,6 +43,8 @@ my %reportGenerators =
                 \&table_percentage_breakdown_by_submission_address,
      detailed_running_average_by_server =>
                 \&detailed_running_average_by_server,
+     detailed_running_average_by_submitter =>
+                \&detailed_running_average_by_submitter,
     );
 
 LocalGetOptions(\%opts,
@@ -280,12 +282,19 @@ sub calculate_averages_for {
 }
 
 sub detailed_running_average_by_server {
-    my (@args) = @_;
+    detailed_running_average_by('server', 'Server', @_);
+}
+
+sub detailed_running_average_by_submitter {
+    detailed_running_average_by('remoteaddress', 'Submission Address', @_);
+}
+
+sub detailed_running_average_by {
+    my ($colname, $printname, @args) = @_;
     my @parameters = @{config_array('parameters')};
 
-    print "<h2 class=\"trend-tracker-header\">Running Average Trends by Server</h2>";
+    print "<h2 class=\"trend-tracker-header\">Running Average Trends by $printname</h2>";
 
-    my $servers = get_total_server_count();
     my %collectedData;
 
     my %graphData;
@@ -294,7 +303,7 @@ sub detailed_running_average_by_server {
     # XXX: rewrite using a single select for every parameter
     foreach my $parameter (@parameters) {
 	my $data = $dbh->selectall_arrayref(
-	    "select timestamp, server, $parameter from $table
+	    "select timestamp, $colname, $parameter from $table
               order by timestamp");
 
 	foreach my $row (@$data) {
@@ -309,7 +318,7 @@ sub detailed_running_average_by_server {
 
     foreach my $parameter (@parameters) {
 	print "<h3>$parameter</h3>\n";
-	print "---------------- $parameter ----------------------\n";
+#	print "---------------- $parameter ----------------------\n";
 	my @values = reverse sort keys(%{$values{$parameter}});
 	pop @values if ($values[$#values] eq '');
 
@@ -339,6 +348,7 @@ sub detailed_running_average_by_server {
 	    y_label => 'percentage',
 	    title => $parameter,
 	    y_max_value => 1,
+	    y_min_value => 0,
 	    bgclr => "white",
 	    x_labels_vertical => 1,
 	    legend_placement => 'RT',
@@ -348,7 +358,7 @@ sub detailed_running_average_by_server {
 	my @legend = @values;
 	map { $_ = valueMap($parameter, $_) } @legend;
 	$graph->set_legend(@legend);
-	print Dumper(\@values);
+#	print Dumper(\@values);
 
 	my $result = $graph->plot(\@coldata);
 	open(IMG, ">$parameter.png");

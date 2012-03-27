@@ -256,6 +256,103 @@ sub get_total_remoteaddress {
     return $total_remoteaddress;
 }
 
+sub calculate_averages_for {
+    my ($collectedData, $lastData, $newaddr) = (@_);
+    my $count = 0;
+    my %dataCounts;
+
+    # loop through each of the keys, resetting the 'current' notion of 
+    # it to th evalue collected for it in the hash.
+    foreach my $point (keys(%$collectedData)) {
+	$count++;
+	$dataCounts{$collectedData->{$point}}++;
+    }
+
+    # calculate percentage of each value
+    foreach my $key (keys(%dataCounts)) {
+	$dataCounts{$key} = $dataCounts{$key}/$count;
+    }
+    return \%dataCounts;
+}
+
+sub detailed_running_average_by_server {
+    my (@args) = @_;
+    my @parameters = @{config_array('parameters')};
+
+    print "<h2 class=\"trend-tracker-header\">Running Average Trends by Server</h2>";
+
+    my $servers = get_total_server_count();
+    my %collectedData;
+
+    my %graphData;
+    my %values;
+
+    # XXX: rewrite using a single select for every parameter
+    foreach my $parameter (@parameters) {
+	my $data = $dbh->selectall_arrayref(
+	    "select timestamp, server, $parameter from $table
+              order by timestamp");
+
+	foreach my $row (@$data) {
+	    $collectedData{$row->[1]} = $row->[2];
+	    my $current = calculate_averages_for(\%collectedData);
+	    foreach my $value (keys(%$current)) {
+		$values{$parameter}{$value} = 1;
+		$graphData{$row->[0]}{$parameter}{$value} = $current->{$value};
+	    }
+	}
+    }
+
+    foreach my $parameter (@parameters) {
+	print "<h3>$parameter</h3>\n";
+	print "---------------- $parameter ----------------------\n";
+	my @values = reverse sort keys(%{$values{$parameter}});
+	pop @values if ($values[$#values] eq '');
+
+	# create the data array
+	#  X: timestamp
+	#  Y: one Y for each value type for the given parameter
+	my @coldata = ([]);
+	for (my $i = 0; $i <= $#values; $i++) {
+	    push @coldata, [];
+	}
+
+	# fill the arrays
+	foreach my $time (keys(%graphData)) {
+	    push @{$coldata[0]}, scalar localtime($time);
+	    my $count = 1;
+	    foreach my $value (@values) {
+		push @{$coldata[$count++]}, $graphData{$time}{$parameter}{$value};
+	    }
+	}
+
+#	print Dumper(\@coldata);
+
+	my $graph = GD::Graph::lines->new(800, 400);
+	$graph->set(
+	    x_label => 'time',
+	    y_label => 'percentage',
+	    title => $parameter,
+	    y_max_value => 1,
+	    bgclr => "white",
+	    x_labels_vertical => 1,
+	    legend_placement => 'RT',
+	    );
+	my @legend = @values;
+	map { $_ = valueMap($parameter, $_) } @legend;
+	$graph->set_legend(@legend);
+	print Dumper(\@values);
+
+	my $result = $graph->plot(\@coldata);
+	open(IMG, ">$parameter.png");
+	binmode IMG;
+	print IMG $result->png;
+	close(IMG);
+	print "<img src=\"$parameter.png\" alt=\"Graph showing $parameter data\"/>\n";
+    }
+}
+
+
 ######################################################################
 # Utility Functions
 #

@@ -41,10 +41,14 @@ my %reportGenerators =
                 \&table_percentage_breakdown_by_server,
      table_percentage_breakdown_by_submission_address =>
                 \&table_percentage_breakdown_by_submission_address,
-     detailed_running_average_by_server =>
-                \&detailed_running_average_by_server,
-     detailed_running_average_by_submitter =>
-                \&detailed_running_average_by_submitter,
+     graph_running_average_by_server =>
+                \&graph_running_average_by_server,
+     graph_running_average_by_submitter =>
+                \&graph_running_average_by_submitter,
+     csv_running_average_by_server =>
+                \&csv_running_average_by_server,
+     csv_running_average_by_submitter =>
+                \&csv_running_average_by_submitter,
     );
 
 LocalGetOptions(\%opts,
@@ -281,19 +285,33 @@ sub calculate_averages_for {
     return \%dataCounts;
 }
 
-sub detailed_running_average_by_server {
-    detailed_running_average_by('server', 'Server', @_);
+sub graph_running_average_by_server {
+    output_running_average_by('server', 'Server',
+			     'graph', @_);
 }
 
-sub detailed_running_average_by_submitter {
-    detailed_running_average_by('remoteaddress', 'Submission Address', @_);
+sub graph_running_average_by_submitter {
+    output_running_average_by('remoteaddress', 'Submission Address',
+			     'graph', @_);
 }
 
-sub detailed_running_average_by {
-    my ($colname, $printname, @args) = @_;
+sub csv_running_average_by_server {
+    output_running_average_by('server', 'Server',
+			     'csv', @_);
+}
+
+sub csv_running_average_by_submitter {
+    output_running_average_by('remoteaddress', 'Submission Address',
+			     'csv', @_);
+}
+
+sub output_running_average_by {
+    my ($colname, $printname, $format, @args) = @_;
     my @parameters = @{config_array('parameters')};
 
-    print "<h2 class=\"trend-tracker-header\">Running Average Trends by $printname</h2>";
+    if ($format eq 'graph') {
+	print "<h2 class=\"trend-tracker-header\">Running Average Trends by $printname</h2>";
+    }
 
     my %collectedData;
 
@@ -317,7 +335,9 @@ sub detailed_running_average_by {
     }
 
     foreach my $parameter (@parameters) {
-	print "<h3>$parameter</h3>\n";
+	if ($format eq 'graph') {
+	    print "<h3>$parameter</h3>\n";
+	}
 #	print "---------------- $parameter ----------------------\n";
 	my @values = reverse sort keys(%{$values{$parameter}});
 	pop @values if ($values[$#values] eq '');
@@ -330,42 +350,62 @@ sub detailed_running_average_by {
 	    push @coldata, [];
 	}
 
+	if ($format eq 'csv') {
+	    # CSV
+	    open(CSV, ">$colname-$parameter.csv");
+	}
+
 	# fill the arrays
 	foreach my $time (keys(%graphData)) {
 #	    push @{$coldata[0]}, scalar localtime($time);
-	    push @{$coldata[0]}, $time;
-	    my $count = 1;
-	    foreach my $value (@values) {
-		push @{$coldata[$count++]}, $graphData{$time}{$parameter}{$value};
+
+	    if ($format eq 'graph') {
+		push @{$coldata[0]}, $time;
+		my $count = 1;
+		foreach my $value (@values) {
+		    push @{$coldata[$count++]}, $graphData{$time}{$parameter}{$value};
+		}
+	    } else {
+		print CSV $time;
+		foreach my $value (@values) {
+		    print ",", $graphData{$time}{$parameter}{$value};
+		}
+		print CSV "\n";
 	    }
+	}
+	if ($format eq 'csv') {
+	    # CSV
+	    close(CSV);
 	}
 
 #	print Dumper(\@coldata);
 
-	my $graph = GD::Graph::lines->new(800, 400);
-	$graph->set(
-	    x_label => 'time',
-	    y_label => 'percentage',
-	    title => $parameter,
-	    y_max_value => 1,
-	    y_min_value => 0,
-	    bgclr => "white",
-	    x_labels_vertical => 1,
-	    legend_placement => 'RT',
-	    x_tick_number => 'auto',
-	    x_number_format => sub { scalar localtime($_[0]); },
-	    );
-	my @legend = @values;
-	map { $_ = valueMap($parameter, $_) } @legend;
-	$graph->set_legend(@legend);
-#	print Dumper(\@values);
+	if ($format eq 'graph') {
+	    my $graph = GD::Graph::lines->new(800, 400);
+	    $graph->set(
+		x_label => 'time',
+		y_label => 'percentage',
+		title => $parameter,
+		y_max_value => 1,
+		y_min_value => 0,
+		bgclr => "white",
+		x_labels_vertical => 1,
+		legend_placement => 'RT',
+		x_tick_number => 'auto',
+		x_number_format => sub { scalar localtime($_[0]); },
+		);
+	    my @legend = @values;
+	    map { $_ = valueMap($parameter, $_) } @legend;
+	    $graph->set_legend(@legend);
+#  	    print Dumper(\@values);
 
-	my $result = $graph->plot(\@coldata);
-	open(IMG, ">$parameter.png");
-	binmode IMG;
-	print IMG $result->png;
-	close(IMG);
-	print "<img src=\"$parameter.png\" alt=\"Graph showing $parameter data\"/>\n";
+	    my $result = $graph->plot(\@coldata);
+	    open(IMG, ">$colname-$parameter.png");
+	    binmode IMG;
+	    print IMG $result->png;
+	    close(IMG);
+	    print "<img src=\"$colname-$parameter.png\" alt=\"Graph showing $parameter data\"/>\n";
+	}
     }
 }
 

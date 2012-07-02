@@ -532,9 +532,10 @@ trend-analysis -- analyize the results collected by trend-tracker.cgi
 =head1 DESCRIPTION
 
 The B<trend-analysis> is used to look at the database filled by the
-trend-tracker.cgi script and format results from it.
-
-XXX: Currently this script does nothing but will in the future
+trend-tracker.cgi script and format results from it.  It generates a
+number of different analysis reports based on the data.  See the
+sample trend-tracker.config file for a list of reports it will
+generate.
 
 =head1 OPTIONS
 

@@ -4,6 +4,7 @@ use DBI;
 use strict;
 use Carp;
 use IO::File;
+use File::Temp qw/tempfile/;
 use Data::Dumper;
 use GD::Graph::lines;
 use GD::Graph::colour qw(:colours);
@@ -362,8 +363,8 @@ sub output_running_average_by {
 	    $CSV->open(">$filename");
 	} else {
 	    # CSV
-	    $CSV = new IO::File;
-	    $filename = "/tmp/$colname-$parameter.csv";
+	    ($CSV, $filename) = tempfile("trendyXXXXXX",
+					 TMPDIR => 1, SUFFIX => ".csv");
 	    $CSV->open(">$filename");
 	}
 
@@ -405,6 +406,7 @@ sub output_running_average_by {
 	    $plotfile->close();
 
 	    system("gnuplot $plotfilename");
+	    unlink($filename);
 	    
 	    print "<img src=\"$colname-$parameter.png\" alt=\"Graph showing $parameter data\"/>\n";
 	}

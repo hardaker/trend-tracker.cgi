@@ -9,7 +9,7 @@ my %opts = ('d' => 'trend-tracker.sqlite',
 	    'c' => 'trend-tracker.config',
 	    'D' => 'DBI:SQLite:dbname=');
 LocalGetOptions(\%opts,
-		['GUI:VERSION',     "trend-tracker version: 0.8"],
+		['GUI:VERSION',     "trend-tracker version: 0.81"],
 		["c|config-file=s", "Config file to read"],
 		['t|table=s',       'Database table name'],
     ) || die;

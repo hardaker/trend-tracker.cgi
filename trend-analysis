@@ -334,7 +334,11 @@ sub output_running_average_by {
 	}
     }
 
+#   print Dumper(\%graphData);
+
     foreach my $parameter (@parameters) {
+	my $CSV;
+
 	if ($format eq 'graph') {
 	    print "<h3>$parameter</h3>\n";
 	}
@@ -350,60 +354,58 @@ sub output_running_average_by {
 	    push @coldata, [];
 	}
 
+	my $filename;
 	if ($format eq 'csv') {
 	    # CSV
-	    open(CSV, ">$colname-$parameter.csv");
+	    $CSV = new IO::File;
+	    $filename = "$colname-$parameter.csv";
+	    $CSV->open(">$filename");
+	} else {
+	    # CSV
+	    $CSV = new IO::File;
+	    $filename = "/tmp/$colname-$parameter.csv";
+	    $CSV->open(">$filename");
 	}
+
+	$CSV->print("# time, " . join(", ", @values) . "\n");
 
 	# fill the arrays
-	foreach my $time (keys(%graphData)) {
-#	    push @{$coldata[0]}, scalar localtime($time);
-
-	    if ($format eq 'graph') {
-		push @{$coldata[0]}, $time;
-		my $count = 1;
-		foreach my $value (@values) {
-		    push @{$coldata[$count++]}, $graphData{$time}{$parameter}{$value};
-		}
-	    } else {
-		print CSV $time;
-		foreach my $value (@values) {
-		    print ",", $graphData{$time}{$parameter}{$value};
-		}
-		print CSV "\n";
+	foreach my $time (sort keys(%graphData)) {
+	    $CSV->print($time);
+	    foreach my $value (@values) {
+		$CSV->print(",", $graphData{$time}{$parameter}{$value});
 	    }
+	    $CSV->print("\n");
 	}
-	if ($format eq 'csv') {
-	    # CSV
-	    close(CSV);
-	}
+	$CSV->close();
 
 #	print Dumper(\@coldata);
 
 	if ($format eq 'graph') {
-	    my $graph = GD::Graph::lines->new(800, 400);
-	    $graph->set(
-		x_label => 'time',
-		y_label => 'percentage',
-		title => $parameter,
-		y_max_value => 1,
-		y_min_value => 0,
-		bgclr => "white",
-		x_labels_vertical => 1,
-		legend_placement => 'RT',
-		x_tick_number => 'auto',
-		x_number_format => sub { scalar localtime($_[0]); },
-		);
-	    my @legend = @values;
-	    map { $_ = valueMap($parameter, $_) } @legend;
-	    $graph->set_legend(@legend);
-#  	    print Dumper(\@values);
+	    my $plotfile = new IO::File;
+	    my $plotfilename = "/tmp/test.gnuplot";
+	    $plotfile->open(">$plotfilename");
+	    $plotfile->print("set terminal png giant\n");
+	    $plotfile->print("set output \"$colname-$parameter.png\"\n");
+	    $plotfile->print("set datafile separator \",\"\n");
+	    $plotfile->print("set xdata time\n");
+	    $plotfile->print("set timefmt \"%s\"\n");
+	    $plotfile->print("set format x \"%y/%m/%d\"\n");
+	    $plotfile->print("set ylabel \"percentage\"\n");
+	    $plotfile->print("set xtics border rotate by 90 offset 0,-5\n");
 
-	    my $result = $graph->plot(\@coldata);
-	    open(IMG, ">$colname-$parameter.png");
-	    binmode IMG;
-	    print IMG $result->png;
-	    close(IMG);
+	    my $plotstring = "plot";
+	    my $columncount = 2;
+	    foreach my $value (@values) {
+		$plotstring .= " \"$filename\" using 1:(100*\$$columncount) with lines,"; # xxx title
+		$columncount++;
+	    }
+	    $plotstring =~ s/,$/\n/;
+	    $plotfile->print($plotstring);
+	    $plotfile->close();
+
+	    system("gnuplot $plotfilename");
+	    
 	    print "<img src=\"$colname-$parameter.png\" alt=\"Graph showing $parameter data\"/>\n";
 	}
     }

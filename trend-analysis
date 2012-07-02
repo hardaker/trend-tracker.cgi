@@ -398,7 +398,7 @@ sub output_running_average_by {
 	    my $plotstring = "plot";
 	    my $columncount = 2;
 	    foreach my $value (@values) {
-		$plotstring .= " \"$filename\" using 1:(100*\$$columncount) with lines title \"" . valueMap("----", $value) . "\","; # xxx title
+		$plotstring .= " \"$filename\" using 1:(100*\$$columncount) with lines title \"" . valueMap($parameter, $value) . "\","; # xxx title
 		$columncount++;
 	    }
 	    $plotstring =~ s/,$/\n/;

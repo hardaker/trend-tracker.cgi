@@ -6,8 +6,6 @@ use Carp;
 use IO::File;
 use File::Temp qw/tempfile/;
 use Data::Dumper;
-use GD::Graph::lines;
-use GD::Graph::colour qw(:colours);
 
 my %opts = ('d' => 'trend-tracker.sqlite',
 	    'c' => 'trend-tracker.config',
@@ -365,7 +363,6 @@ sub output_running_average_by {
 	    # CSV
 	    ($CSV, $filename) = tempfile("trendyXXXXXX",
 					 TMPDIR => 1, SUFFIX => ".csv");
-	    $CSV->open(">$filename");
 	}
 
 	$CSV->print("# time, " . join(", ", @values) . "\n");
@@ -391,9 +388,9 @@ sub output_running_average_by {
 	    $plotfile->print("set datafile separator \",\"\n");
 	    $plotfile->print("set xdata time\n");
 	    $plotfile->print("set timefmt \"%s\"\n");
-	    $plotfile->print("set format x \"%y/%m/%d\"\n");
+	    $plotfile->print("set format x \"%y/%m\"\n");
 	    $plotfile->print("set ylabel \"percentage\"\n");
-	    $plotfile->print("set xtics border rotate by 90 offset 0,-5\n");
+	    $plotfile->print("set xtics border rotate by 90\n");
 
 	    my $plotstring = "plot";
 	    my $columncount = 2;

@@ -341,7 +341,7 @@ sub output_running_average_by {
 	my $CSV;
 
 	if ($format eq 'graph') {
-	    print "<h3>$parameter</h3>\n";
+	    print "<h3>$parameter Trend by $printname</h3>\n";
 	}
 #	print "---------------- $parameter ----------------------\n";
 	my @values = reverse sort keys(%{$values{$parameter}});

@@ -406,7 +406,7 @@ Wes Hardaker E<lt>opensource AT hardakers DOT netE<gt>
 
 =head1 COPYRIGHT and LICENSE
 
-Copyright (c) 2012 Wes Hardaker
+Copyright (c) 2012-2013 Wes Hardaker
 
 All rights reserved.  This program is free software; you may
 redistribute it and/or modify it under the same terms as Perl itself.

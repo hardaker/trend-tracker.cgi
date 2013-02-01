@@ -391,6 +391,7 @@ sub output_running_average_by {
 	    $plotfile->print("set format x \"%y/%m\"\n");
 	    $plotfile->print("set ylabel \"percentage\"\n");
 	    $plotfile->print("set xtics border rotate by 90\n");
+	    $plotfile->print("set yrange [0:100]\n");
 
 	    my $plotstring = "plot";
 	    my $columncount = 2;

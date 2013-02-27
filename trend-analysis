@@ -51,7 +51,7 @@ my %reportGenerators =
     );
 
 LocalGetOptions(\%opts,
-	   ['GUI:VERSION',     "trend-tracker version: 0.81"],
+	   ['GUI:VERSION',     "trend-tracker version: 0.9"],
 	   ["c|config-file=s", "Config file to read"],
 	   ['t|table=s',       'Database table name'],
           ) || die;

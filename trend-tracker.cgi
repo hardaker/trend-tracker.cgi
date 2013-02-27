@@ -10,7 +10,7 @@ use DBI;
 our %config;
 our $dbh;
 
-our $VERSION = '0.91';
+our $VERSION = '0.92';
 
 my $runpath = $ENV{'SCRIPT_FILENAME'};
 $runpath =~ s/(.*)\/(.*)/$1/;

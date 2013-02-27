@@ -143,6 +143,8 @@ sub table_numerical_breakdown_by {
 
     my $colspan = "colspan=\"2\"" if (!$args{'percent_only'});
 
+    my %parametertotals;
+
     foreach my $parameter (@parameters) {
 	print "<th $colspan class=\"trend-tracker-top-header trend-tracker-header\">$parameter</th>";
 	my $data = $dbh->selectall_arrayref(
@@ -155,6 +157,7 @@ sub table_numerical_breakdown_by {
              order by $parameter");
 	foreach my $valuerow (@$data) {
 	    $completeData{$valuerow->[0]}{$parameter} = $valuerow->[1];
+	    $parametertotals{$parameter} += $valuerow->[1];
 	}
     }
     print "  </tr>\n";
@@ -165,7 +168,7 @@ sub table_numerical_breakdown_by {
 	    my $yesNoMaybeClass = 
 		$completeData{$value}{$parameter} == 0 ?
 		"trend-tracker-data-0" :
-		     ($completeData{$value}{$parameter} == $totalcount ?
+		     ($completeData{$value}{$parameter} == $parametertotals{$parameter} ?
                       "trend-tracker-data-100" :
 		      "trend-tracker-data-inbetween");
 	    $yesNoMaybeClass .= " " . $yesNoMaybeClass . "-" 
@@ -178,7 +181,8 @@ sub table_numerical_breakdown_by {
 
 	    # print the row data column
 	    print "<td class=\"trend-tracker-column trend-tracker-percentage-column $yesNoMaybeClass\">" .
-		percent($completeData{$value}{$parameter}, $totalcount) .
+		percent($completeData{$value}{$parameter},
+			$parametertotals{$parameter}) .
 		"</td>";
 	}
 	print "</tr>\n";
@@ -274,7 +278,7 @@ sub calculate_averages_for {
     my %dataCounts;
 
     # loop through each of the keys, resetting the 'current' notion of 
-    # it to th evalue collected for it in the hash.
+    # it to the value collected for it in the hash.
     foreach my $point (keys(%$collectedData)) {
 	$count++;
 	$dataCounts{$collectedData->{$point}}++;

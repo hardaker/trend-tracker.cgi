@@ -388,7 +388,7 @@ sub output_running_average_by {
 	    $plotfile->print("set datafile separator \",\"\n");
 	    $plotfile->print("set xdata time\n");
 	    $plotfile->print("set timefmt \"%s\"\n");
-	    $plotfile->print("set format x \"%y/%m\"\n");
+	    $plotfile->print("set format x \"%Y/%m\"\n");
 	    $plotfile->print("set ylabel \"percentage\"\n");
 	    $plotfile->print("set xtics border rotate by 90\n");
 	    $plotfile->print("set yrange [0:100]\n");
@@ -404,7 +404,8 @@ sub output_running_average_by {
 	    $plotfile->close();
 
 	    system("gnuplot $plotfilename");
-	    sleep(10);
+	    sleep(1);
+	    #print STDERR "sleeping...\n";
 	    unlink($filename);
 	    
 	    print "<img src=\"$colname-$parameter.png\" alt=\"Graph showing $parameter data\"/>\n";

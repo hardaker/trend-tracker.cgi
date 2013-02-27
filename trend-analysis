@@ -324,6 +324,7 @@ sub output_running_average_by {
     foreach my $parameter (@parameters) {
 	my $data = $dbh->selectall_arrayref(
 	    "select timestamp, $colname, $parameter from $table
+              where $parameter <> '' and $parameter is not null
               order by timestamp");
 
 	foreach my $row (@$data) {

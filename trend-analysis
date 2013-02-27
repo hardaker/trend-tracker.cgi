@@ -149,6 +149,7 @@ sub table_numerical_breakdown_by {
 	    "select $parameter,count($parameter)
                from (select $parameter, $colname, count($colname)
                        from $table as t1
+                      where $parameter <> '' and $parameter is not null
                       group by $colname,$parameter) as t2
              group by $parameter
              order by $parameter");
@@ -199,6 +200,7 @@ sub detailed_percentage_breakdown_by_server {
 	    "select $parameter,count($parameter)
                from (select $parameter, server, count(server)
                        from $table
+                      where $parameter <> '' and $parameter is not null
                       group by server,$parameter)
              group by $parameter
              order by $parameter");
@@ -226,6 +228,7 @@ sub detailed_percentage_breakdown_by_submission_address {
 	    "select $parameter,count($parameter)
                from (select $parameter, remoteaddress, count(remoteaddress)
                        from $table
+                      where $parameter <> '' and $parameter is not null
                       group by remoteaddress,$parameter)
              group by $parameter
              order by $parameter");
